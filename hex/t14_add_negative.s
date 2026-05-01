@@ -17,7 +17,8 @@ sub x12, x5, x1       # x12 = 16 - (-1) = 0x00000011 (positive - negative = posi
 
 addi x13, x1, 1       # x13 = (-1) + 1 = 0x00000000 (negative + positive = zero)
 
-jal x0, 0             # Infinite loop
+end:
+beq x0, x0, end       # Infinite loop
 #
 # Expected Results:
 # x8 = 0xFFFFFFFD (negative sum)

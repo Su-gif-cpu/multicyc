@@ -1,12 +1,10 @@
-# t02_itype.s - Immediate Type Instructions Test
-# Critical: Sign Extension Test
+# t02_itype.s - I-type immediate and sign-extension
+# PASS condition: x4 == 0xFFFFFF01
 
-addi x1, x0, -1       # x1 = 0xFFFFFFFF (12-bit immediate -1 sign-extended to 32-bit)
-# This tests the Sign Extend module: 0xFFF -> 0xFFFFFFFF (not 0x00000FFF!)
+addi x1, x0, -1       # critical: 0xFFF must sign-extend to 0xFFFFFFFF
+addi x2, x1, 1        # result must be zero
+ori  x3, x0, -256     # sign-extended immediate OR test
+addi x4, x3, 1        # 0xFFFFFF00 + 1 = 0xFFFFFF01
 
-addi x2, x1, 1        # x2 = 0xFFFFFFFF + 1 = 0x00000000 (negative + positive = zero)
-
-ori x3, x0, -256      # x3 = 0xFFFFFFF00 (12-bit immediate -256 sign-extended, then OR'ed)
-# Expected: Demonstrates sign extension correctness
-
-jal x0, 0             # Infinite loop
+end:
+beq  x0, x0, end

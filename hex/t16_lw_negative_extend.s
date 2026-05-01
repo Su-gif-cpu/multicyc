@@ -1,25 +1,22 @@
-# t16_lw_negative_extend.s - LW with Negative Offset Deep Test (Optional)
-# Extended test for negative offset load operations
-# Tests: Load with various negative offsets to verify address calculation
+# t16_lw_negative_extend.s - branch/jump mixed control flow
+# Covers backward branch, forward jal, and jalr.
+# PASS condition: x9 == 0x00000028
 
-addi x1, x0, 0x20     # x1 = 0x20 (base address)
-ori x2, x0, 0xDEAD    # x2 = 0x0000DEAD
-addi x2, x2, 0xBEEF << 16  # Not valid, use alternative:
-ori x2, x0, 0xBEEF    # x2 = 0x0000BEEF (simplified data)
-sw x2, 0(x1)          # Store at [0x20]
+addi x1, x0, 0
+addi x2, x0, 3
+addi x3, x0, 0
+loop:
+addi x3, x3, 1
+bne  x3, x2, loop      # backward (negative offset)
 
-# Load with small negative offset
-lw x3, -4(x1)         # x3 = memory[0x20 - 4] = memory[0x1C]
+jal  x5, after_skip     # forward (positive offset)
+addi x6, x0, 0x11       # skipped
+after_skip:
+addi x7, x0, 0x22
 
-# Load with larger negative offset
-lw x4, -8(x1)         # x4 = memory[0x20 - 8] = memory[0x18]
+addi x10, x0, 44        # absolute target used by jalr
+jalr x9, x10, 0         # x9 gets return address 40 (0x28)
+addi x11, x0, 0x33      # skipped if jalr works
 
-# Load with maximum 12-bit negative offset (-2048)
-lw x5, -2048(x1)      # x5 = memory[0x20 - 2048] = memory[0xFFFFF820] (wraps or out of range)
-
-jal x0, 0             # Infinite loop
-#
-# This test is optional and verifies:
-# 1. Negative immediate sign extension
-# 2. Address calculation with large negative offsets
-# 3. Memory access boundary conditions
+end:
+beq  x0, x0, end
