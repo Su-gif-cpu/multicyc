@@ -132,9 +132,9 @@ def main():
         (
             "t08",
             "t08_jalr",
-            "jalr 按 rs 跳转：目标地址置于 x1（如 0x10），jalr 后应跳过 addi x30（误路径）。"
-            "（RARS 下可观察 x5 链路与 PC；VCS 以 x30 未被写为 123 判定跳过成功。）",
-            "x30 == 0x00000000",
+            "jalr 目标由 jal 链路计算；入口 ori x30,0,0x42 为哨兵，两条坏路 addi x30,123 任一执行即破坏；"
+            "末尾 beq 自旋在 RARS 会撞到步数上限属预期（裸机无 ebreak）。",
+            "x30 == 0x00000042",
         ),
         (
             "t09",
@@ -181,9 +181,9 @@ def main():
         (
             "t16",
             "t16_lw_negative_extend",
-            "控制流组合：bne 后向循环；jal 跳过中间指令；jalr x9,x10,0 将返回地址写入 x9（期望 0x28）。"
-            "（文件名偏历史；本条侧重分支与 jal/jalr 配合。）",
-            "x9 == 0x00000028",
+            "控制流组合：bne 后向；jal 跳过 addi x6；jal 的 x5 指向槽位，addi x10,x5,20 指向 end，jalr 跳过 addi x11。"
+            "x9=PC(jalr)+4；VCS 判据为 PC_BASE+0x28。",
+            "x9 == PC_BASE + 0x28",
         ),
         (
             "t17",

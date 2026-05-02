@@ -114,7 +114,8 @@ def jal(rd, imm):
     return enc_j(0x6F, rd, imm)
 
 
-END = jal(0, 0)  # infinite loop at same PC offset 0
+# 自旋用 beq 而非 jal x0,0：部分多周期实现对「jal 偏移为 0」的 NPC/取指组合会在末两条指令间抖振
+END = beq(0, 0, 0)
 
 PROGRAMS = {
     "t17_addi_bounds": [

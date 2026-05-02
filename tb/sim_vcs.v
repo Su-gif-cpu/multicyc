@@ -9,6 +9,8 @@ module riscv_sim();
     reg [8*64-1:0] hex_path;
     integer cycle_count;
     integer timeout_cycles;
+    // 连续多少个时钟周期 PC 不变即判停（默认 1，更快 $finish；多周期取指抖动可 make +STABLE=2）
+    integer stable_need;
     integer stable_pc_cycles;
     reg [31:0] last_pc;
     integer i;
@@ -24,7 +26,8 @@ module riscv_sim();
                 "t05_beq_not_taken": is_pass = (U_RISCV.U_RF.register[5] == 32'h00000001);
                 "t06_bne": is_pass = (U_RISCV.U_RF.register[10] == 32'h00000001);
                 "t07_jal_link": is_pass = (U_RISCV.U_RF.register[12] == 32'h00000001);
-                "t08_jalr": is_pass = (U_RISCV.U_RF.register[30] == 32'h00000000);
+                // 入口 ori x30=0x42；任一条坏路 addi x30,123 会破坏哨兵，不能再用「x30==0」
+                "t08_jalr": is_pass = (U_RISCV.U_RF.register[30] == 32'h00000042);
                 "t09_x0": is_pass = (U_RISCV.U_RF.register[1] == 32'h00000066);
                 "t10_loop_bne": is_pass = (U_RISCV.U_RF.register[1] == 32'h00000003);
                 "t11_jal_back": is_pass = (U_RISCV.U_RF.register[3] == 32'h00000003);
@@ -32,7 +35,8 @@ module riscv_sim();
                 "t13_shift_boundary": is_pass = (U_RISCV.U_RF.register[13] == 32'h00000000);
                 "t14_add_negative": is_pass = (U_RISCV.U_RF.register[13] == 32'h00000000);
                 "t15_bne_false": is_pass = (U_RISCV.U_RF.register[8] == 32'h00000088);
-                "t16_lw_negative_extend": is_pass = (U_RISCV.U_RF.register[9] == 32'h00000028);
+                // x9 = PC(jalr)+4；程序起点为 PC_BASE 时等于 PC_BASE+40（原 0x28 仅当 PC_BASE=0 成立）
+                "t16_lw_negative_extend": is_pass = (U_RISCV.U_RF.register[9] == (PC_BASE + 32'h00000028));
                 "t17_addi_bounds": is_pass = (U_RISCV.U_RF.register[20] == 32'hFFFFFFFF);
                 "t18_ori_and": is_pass = (U_RISCV.U_RF.register[20] == 32'h000007FF);
                 "t19_xor_sign": is_pass = (U_RISCV.U_RF.register[20] == 32'hFFFFFFFE);
@@ -75,6 +79,12 @@ module riscv_sim();
         $display("\n====================================================");
         $display("  TESTBENCH START: %0s", test_name);
         $display("  Instruction ROM: %0s", hex_path);
+        stable_need = 1;
+        if (!$value$plusargs("STABLE=%d", stable_need))
+            stable_need = 1;
+        if (stable_need < 1)
+            stable_need = 1;
+        $display("  STABLE (PC unchanged clocks to stop): %0d", stable_need);
         $display("====================================================\n");
 
         for (i = 1; i < 32; i = i + 1) begin
@@ -113,7 +123,7 @@ module riscv_sim();
             end
             last_pc = U_RISCV.U_PC.PC;
 
-            if (stable_pc_cycles >= 2) begin
+            if (stable_pc_cycles >= stable_need) begin
                 if (is_pass(test_name)) begin
                     $display("\n==================== TEST PASS ====================");
                     $display("  Test      : %0s", test_name);

@@ -8,6 +8,8 @@ MAKEFILE_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 TEST ?= t01_ralu
 SEED ?= 1
 TIMEOUT ?= 500000
+# 连续多少拍 PC 不变即结束仿真（默认 1；若误触发可改为 2）
+STABLE ?= 1
 VERDI_HOME ?= $(VERDI_HOME)
 
 TESTS = t01_ralu t02_itype t03_mem t04_beq_taken t05_beq_not_taken t06_bne t07_jal_link t08_jalr t09_x0 t10_loop_bne t11_jal_back t12_sw_neg t13_shift_boundary t14_add_negative t15_bne_false t16_lw_negative_extend t17_addi_bounds t18_ori_and t19_xor_sign t20_sub_self t21_srl_rs0 t22_sll31 t23_beq_always t24_jal_jalr_ret t25_sw_overwrite t26_alu_chain t27_sra_neg1 t28_bne_taken t29_or_combine t30_sw_lw_min_offset t31_jalr_imm t32_add_maxint_wrap t33_sra_pos_msb t34_lw_x0_rs t35_mem_chain_offsets t36_bne_loop10 t37_beq_fallthrough2 t38_sub_from_zero
@@ -19,7 +21,7 @@ all: compile
 	for t in $(TESTS); do \
 		echo "===================================================="; \
 		echo " Running test: $$t"; \
-		./simv +TEST=$$t +TIMEOUT=$(TIMEOUT) +vcs+loopdetect +vcs+loopreport -l simv_$$t.log; \
+		./simv +TEST=$$t +TIMEOUT=$(TIMEOUT) +STABLE=$(STABLE) +vcs+loopdetect +vcs+loopreport -l simv_$$t.log; \
 		echo "===================================================="; \
 	done
 
@@ -28,14 +30,14 @@ all: compile
 $(TESTS):
 	@echo "===================================================="
 	@echo " Running test: $@"
-	@$(MAKE) -f $(MAKEFILE_DIR)Makefile.vcs run TEST=$@ TIMEOUT=$(TIMEOUT)
+	@$(MAKE) -f $(MAKEFILE_DIR)Makefile.vcs run TEST=$@ TIMEOUT=$(TIMEOUT) STABLE=$(STABLE)
 	@echo "===================================================="
 
 
 test: run
 
 run: compile
-	./simv +TEST=$(TEST) +TIMEOUT=$(TIMEOUT) +vcs+loopdetect +vcs+loopreport -l simv_$(TEST).log
+	./simv +TEST=$(TEST) +TIMEOUT=$(TIMEOUT) +STABLE=$(STABLE) +vcs+loopdetect +vcs+loopreport -l simv_$(TEST).log
 
 compile:
 	vcs \
@@ -64,6 +66,7 @@ help:
 	@echo "   clean   => remove generated simulator files and logs" 
 	@echo " "
 	@echo " Example: make -f Makefile.vcs run TEST=t05_beq_not_taken" 
+	@echo " Optional: STABLE=n (default 1) — PC 不变连续 n 拍后判停；误触发可 STABLE=2" 
 	@echo "==============================================================================="
 
 verdi:
