@@ -157,9 +157,11 @@ PROGRAMS = {
         addi(20, 0, 0x42),
         END,
     ],
+    # jal->callee; ret site: addi x21 then jal x0,end (skip falling into callee)
     "t24_jal_jalr_ret": [
-        jal(5, 8),
+        jal(5, 12),
         addi(21, 0, 0xAA),
+        jal(0, 12),
         addi(20, 0, 0x33),
         jalr(0, 5, 0),
         END,

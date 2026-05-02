@@ -230,7 +230,8 @@ def main():
         (
             "t24",
             "t24_jal_jalr_ret",
-            "子程序调用：jal x5,callee 后 callee 内 x20=0x33，jalr x0,x5,0 返回后执行 addi x21=0xAA。",
+            "子程序调用：jal x5,callee；callee 内 x20=0x33 后 jalr 返回；返回点执行 addi x21=0xAA，"
+            "再 jal x0,end 避免顺序落入 callee 造成死循环；最后自旋。",
             "x20==0x33 且 x21==0xAA",
         ),
         (

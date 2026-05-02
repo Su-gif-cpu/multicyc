@@ -61,8 +61,10 @@ module ControlUnit(
                     end
                     `INSTR_ITYPE_OP: begin
                         ALUSrcA = `ALUSrcA_A; ALUSrcB = `ALUSrcB_Imm;
-                        if (Funct3 == `INSTR_ORI_FUNCT) begin ExtSel = `ExtSel_ZERO; ALUOp = `ALUOp_OR; end 
-                        else begin ExtSel = `ExtSel_SIGNED; ALUOp = `ALUOp_ADD; end
+                        // RV32I：I 型立即数一律 12 位符号扩展（含 ori）；勿对 ori 做零扩展。
+                        ExtSel = `ExtSel_SIGNED;
+                        if (Funct3 == `INSTR_ORI_FUNCT) ALUOp = `ALUOp_OR;
+                        else ALUOp = `ALUOp_ADD;
                         RFWrite = 1; PCWrite = 1;
                     end
                     `INSTR_SW_OP: begin
